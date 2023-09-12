@@ -1,0 +1,7 @@
+add_library(inv_mpu STATIC)
+target_sources(inv_mpu PRIVATE inv_mpu.c)
+target_include_directories(inv_mpu PUBLIC inv_mpu.h)
+
+add_library(inv_mpu_dmp_motion_driver STATIC)
+target_sources(inv_mpu_dmp_motion_driver PRIVATE inv_mpu_dmp_motion_driver.c)
+target_include_directories(inv_mpu_dmp_motion_driver PUBLIC inv_mpu_dmp_motion_driver.h)

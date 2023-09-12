@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.txt": "cpp",
+        "i2cdev.h": "c",
+        "random": "cpp"
+    }
+}
