@@ -6,7 +6,6 @@
 #include <math.h>
 
 #include "../helper_3dmath.h"
-#include "../MotionSensor.h"
 #include "../inv_mpu_lib/inv_mpu.h"
 #include "../inv_mpu_lib/inv_mpu_dmp_motion_driver.h"
 #include "sensor.h"
@@ -14,36 +13,10 @@
 #define wrap_180(x) (x < -180 ? x+360 : (x > 180 ? x - 360: x))
 #define delay_ms(a)    usleep(a*1000)
 
-// MPU control/status vars
-uint8_t devStatus;      // return status after each device operation
-//(0 = success, !0 = error)
-uint8_t fifoCount;     // count of all bytes currently in FIFO
-uint8_t fifoBuffer[64]; // FIFO storage buffer
+IMU::IMU(){
+}
 
-int16_t a[3];              // [x, y, z]            accel vector
-int16_t g[3];              // [x, y, z]            gyro vector
-int32_t _q[4];
-int32_t t;
-int16_t c[3];
-
-VectorFloat gravity;    // [x, y, z]            gravity vector
-
-int r;
-int initialized = 0;
-int dmpReady = 0;
-float lastval[3];
-int16_t sensors;
-
-float ypr[3];
-Quaternion q; 
-float temp;
-float gyro[3];
-float accel[3];
-float compass[3];
-
-uint8_t rate = 40;
-
-int ms_open() {
+int IMU::init() {
 	dmpReady=1;
 	initialized = 0;
 	for (int i=0;i<DIM;i++){
@@ -69,6 +42,11 @@ int ms_open() {
 	printf("Setting ACCEL sensitivity...\n");
 	if (mpu_set_accel_fsr(2)!=0) {
 		printf("Failed to set accel sensitivity!\n");
+		return -1;
+	}
+
+	if(mpu_set_lpf(20)!=0){
+		printf("Failed to set filter!\n");
 		return -1;
 	}
 	// verify connection
@@ -126,8 +104,39 @@ int ms_open() {
 	initialized = 1;
 	return 0;
 }
+int IMU::getOffset(){
+	if (!dmpReady) {
+		printf("Error: DMP not ready!!\n");
+		return -1;
+	}
+	// количество замеров для опредление офсета
+	const int rpNum = 50;
 
-int ms_update() {
+	int16_t a_offset[3];              // [x, y, z]            accel vector
+    int16_t g_offset[3];              // [x, y, z]            gyro vector
+
+	for(int i = 0; i <rpNum; i++ )
+	{
+		while (dmp_read_fifo(g,a,_q,&sensors,&fifoCount)!=0); //gyro and accel can be null because of being disabled in the efeatures
+		for (int j=0;j<DIM;j++){
+			a_offset[j] += a[j];
+			g_offset[j] += g[j];
+		}
+	}
+
+	for (int j=0;j<DIM;j++){
+		a_offset[j] /= rpNum;
+		g_offset[j] /= rpNum;
+	}
+
+	for (int i=0;i<DIM;i++){
+		gyroOffset[i]  = (float)(g_offset[DIM-i-1])/131.0/360.0;
+		accelOffset[i] = (float)(a_offset[DIM-i-1]);
+	}
+}
+
+
+int IMU::update() {
 	if (!dmpReady) {
 		printf("Error: DMP not ready!!\n");
 		return -1;
@@ -140,8 +149,6 @@ int ms_update() {
 
 	mpu_get_temperature(&t);
 	temp=(float)t/65536L;
-
-	mpu_get_compass_reg(c);
 
 	//scaling for degrees output
 	for (int i=0;i<DIM;i++){
@@ -158,26 +165,25 @@ int ms_update() {
 	//swapped to match Yaw,Pitch,Roll
 	//Scaled from deg/s to get tr/s
 	for (int i=0;i<DIM;i++){
-		gyro[i]   = (float)(g[DIM-i-1])/131.0/360.0;
-		accel[i]   = (float)(a[DIM-i-1]);
-		compass[i] = (float)(c[DIM-i-1]);
+		gyro[i]   = (float)(g[DIM-i-1])/131.0/360.0 - gyroOffset[i];
+		accel[i]   = (float)(a[DIM-i-1]) - accelOffset[i];
 	}
 
 	return 0;
 }
 
-int ms_close() {
+int IMU::close() {
 	return 0;
 }
 
-uint8_t GetGravity(VectorFloat *v, Quaternion *q) {
-	v -> x = 2 * (q -> x*q -> z - q -> w*q -> y);
-	v -> y = 2 * (q -> w*q -> x + q -> y*q -> z);
+uint8_t IMU::GetGravity(VectorFloat *v, Quaternion *q) {
+	v -> x = 2 * (q->x * q->z - q->w * q->y);
+	v -> y = 2 * (q->w * q->x + q->y * q->z);
 	v -> z = q -> w*q -> w - q -> x*q -> x - q -> y*q -> y + q -> z*q -> z;
 	return 0;
 }
 
-uint8_t GetYawPitchRoll(float *data, Quaternion *q, VectorFloat *gravity) {
+uint8_t IMU::GetYawPitchRoll(float *data, Quaternion *q, VectorFloat *gravity) {
 	// yaw: (about Z axis)
 	data[0] = atan2(2*q -> x*q -> y - 2*q -> w*q -> z, 2*q -> w*q -> w + 2*q -> x*q -> x - 1);
 	// pitch: (nose up/down, about Y axis)

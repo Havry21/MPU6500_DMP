@@ -3,17 +3,20 @@
 #include <math.h>
 #include <time.h>
 
-#include "MotionSensor.h"
+#include "sensor/sensor.h"
 
 #define delay_ms(a) usleep(a*1000)
 
+IMU mpu;
+
 int main() {
-	ms_open();
+	mpu.init();
+
 	do{
-		ms_update();
-		printf("yaw = %2.1f\tpitch = %2.1f\troll = %2.1f\ttemperature = %2.1f\tcompass = %2.1f, %2.1f, %2.1f\n",
-		 ypr[YAW], ypr[PITCH],
-		 ypr[ROLL],temp,compass[0],compass[1],compass[2]);
+		mpu.update();
+		printf("yaw = %2.1f\tpitch = %2.1f\troll = %2.1f \t_accel = %2.1f, %2.1f, %2.1f\n",
+		 mpu.ypr[YAW], mpu.ypr[PITCH],
+		 mpu.ypr[ROLL],mpu.accel[0],mpu.accel[1],mpu.accel[2]);
 		delay_ms(5);
 	}while(1);
 

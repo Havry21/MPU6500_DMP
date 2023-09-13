@@ -42,7 +42,7 @@
 #define delay_ms(a)    usleep(a*1000)
 #define printf_P	printf
 
-#define MPU6050
+#define MPU6500
 
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
 #error  Which gyro are you using? Define MPUxxxx in your compiler options.
@@ -722,7 +722,7 @@ uint8_t mpu_init(struct int_param_s *int_param)
 #define MPU6500_MEM_REV_ADDR    (0x17)
 	if (mpu_read_mem(MPU6500_MEM_REV_ADDR, 1, &rev))
 		return 1;
-	if (rev == 0x1)
+	if (rev == 0x2)
 		st.chip_cfg.accel_half = 0;
 	else
 	{
@@ -2287,6 +2287,7 @@ uint8_t mpu_read_mem(uint16_t mem_addr, uint16_t length,
 
 	if (!data)
 		return 1;
+	st.chip_cfg.sensors = 1;
 	if (!st.chip_cfg.sensors)
 		return 1;
 
