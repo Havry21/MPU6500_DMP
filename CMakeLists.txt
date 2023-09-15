@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(mpu6500 LANGUAGES CXX)
-
+set(CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS -pthread)
 # include(CTest)
 # enable_testing()
 
