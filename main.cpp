@@ -10,8 +10,9 @@
 
 #include "sensor/sensor.h"
 #include <wiringPi.h>
+#include "I2Cdev/I2Cdev.h"
+#include "regulator/regulator.h"
 
-#define delay_ms(a) usleep(a*1000)
 using namespace std;
 using namespace std::chrono;
 
@@ -40,16 +41,18 @@ void test(){
 int main() {
 	wiringPiSetup();
 	mpu.init();
-	mpu.getOffset();
+	// 0 - 17 пин на самом деле
 	wiringPiISR(0,INT_EDGE_FALLING,imuCallback);
-
+	regulator motorReg = regulator(&mpu.currenPos.ypr[1], 100.0);
+	motorReg.start(100,0,mpu.currenPos.ypr[1]);
 	while(1){
-		printf("Yaw = %2.2f, Pitch = %2.2f, Roll = %2.2f \t Accel = %2.2f, %2.2f, %2.2f \t Gravity = %2.2f, %2.2f, %2.2f \t LinAccel = %2.2f, %2.2f, %2.2f \n",
-		mpu.currenPos.ypr[0],mpu.currenPos.ypr[1],mpu.currenPos.ypr[2],
-		mpu.currenPos.accel[0],mpu.currenPos.accel[1],mpu.currenPos.accel[2],
-		mpu.currenPos.gravity.x,mpu.currenPos.gravity.y,mpu.currenPos.gravity.z,
-		mpu.currenPos.linAccel[0], mpu.currenPos.linAccel[1],mpu.currenPos.linAccel[2]);
-		std::this_thread::sleep_for(5ms);
+		motorReg.work();
+		// printf("Yaw = %2.2f, Pitch = %2.2f, Roll = %2.2f \t Accel = %2.2f, %2.2f, %2.2f \t Gravity = %2.2f, %2.2f, %2.2f \t LinAccel = %2.2f, %2.2f, %2.2f \n",
+		// mpu.currenPos.ypr[0],mpu.currenPos.ypr[1],mpu.currenPos.ypr[2],
+		// mpu.currenPos.accel[0],mpu.currenPos.accel[1],mpu.currenPos.accel[2],
+		// mpu.currenPos.gravity.x,mpu.currenPos.gravity.y,mpu.currenPos.gravity.z,
+		// mpu.currenPos.linAccel[0], mpu.currenPos.linAccel[1],mpu.currenPos.linAccel[2]);
+		// std::this_thread::sleep_for(5ms);
 	}
 
 

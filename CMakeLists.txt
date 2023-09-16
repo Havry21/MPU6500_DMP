@@ -9,6 +9,7 @@ set(LIBS_NAME
     I2Cdev
     sensor
     inv_mpu_lib
+    regulator
     )
 add_executable(mpu6500 main.cpp)
 
