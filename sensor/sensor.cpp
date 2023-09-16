@@ -13,6 +13,9 @@
 #define wrap_180(x) (x < -180 ? x + 360 : (x > 180 ? x - 360 : x))
 #define delay_ms(a) usleep(a * 1000)
 
+
+
+
 IMU::IMU()
 {
 }
@@ -107,6 +110,14 @@ int IMU::init()
 		return -1;
 	}
 
+	// printf("Set interrupt mode...\n");
+	// if (dmp_set_interrupt_mode(DMP_INT_CONTINUOUS) != 0)
+	// {
+	// 	printf("Failed to set interrupt mode!\n");
+	// 	return -1;
+	// }
+	
+
 	printf("Checking... ");
 	do
 	{
@@ -126,8 +137,7 @@ int IMU::dmpRead(PositionData *_pos)
 		printf("Error: DMP not ready!!\n");
 		return -1;
 	}
-	while (dmp_read_fifo(g, a, _q, &sensors, &fifoCount) != 0)
-		;
+	while (dmp_read_fifo(g, a, _q, &sensors, &fifoCount) != 0);
 
 	_pos->q = _q;
 
@@ -184,9 +194,9 @@ int IMU::getOffset()
 int IMU::update()
 {
 	dmpRead(&currenPos);
-	if(enableMeasure){
-		measurePosition();
-	}
+	// if(enableMeasure){
+	// 	measurePosition();
+	// }
 	return 0;
 }
 

@@ -17,3 +17,4 @@ foreach(LIB ${LIBS_NAME})
     target_link_libraries(mpu6500 PRIVATE ${LIB})
 endforeach(LIB)
 
+target_link_libraries(mpu6500 PRIVATE wiringPi)

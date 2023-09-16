@@ -51,17 +51,6 @@ public:
     PositionData zeroPos;
     PositionData measuredPos;
 
-    // float ypr[3];
-    // Quaternion q;
-    // float temp;
-    // float gyro[3];
-    // float accel[3];
-    // float linAccel[3];
-    // float distance[3];
-
-    // float gyroOffset[3];
-    // float accelOffset[3];
-
     uint8_t rate = 40;
     bool enableMeasure = false;
 
