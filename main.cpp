@@ -7,16 +7,21 @@
 #include <math.h>
 #include <chrono>
 #include <thread>
+#include <unistd.h>
 
 #include "sensor/sensor.h"
 #include <wiringPi.h>
 #include "I2Cdev/I2Cdev.h"
 #include "regulator/regulator.h"
 
+#include <mutex>
+std::mutex g_lock;
+
 using namespace std;
 using namespace std::chrono;
 
 IMU mpu;
+regulator motorReg = regulator(&mpu.currenPos.ypr[1], 100.0);
 
 static auto startTime = std::chrono::system_clock::now();
 static auto endTime = std::chrono::system_clock::now();
@@ -26,27 +31,23 @@ static void imuCallback(){
 	mpu.update();
 	// std::cout << std::chrono::duration_cast<microseconds>(startTime - endTime).count() << " microseconds\n";
 	// endTime = std::chrono::system_clock::now();
+	motorReg.work();
+
 }
 
-void test(){
-	do{
-		printf("Start Measuring");
-		mpu.setZero();
-		mpu.stopMeasure();
-		printf("End Measuring");
-		printf("Dist = %2.2f,%2.2f,%2.2f", mpu.measuredPos.distance[0],mpu.measuredPos.distance[1],mpu.measuredPos.distance[2]);
-	}while(1);
-}
+
+
 
 int main() {
 	wiringPiSetup();
 	mpu.init();
-	// 0 - 17 пин на самом деле
 	wiringPiISR(0,INT_EDGE_FALLING,imuCallback);
-	regulator motorReg = regulator(&mpu.currenPos.ypr[1], 100.0);
+	// 0 - 17 пин на самом деле
+
+	// motorReg.stop();
 	motorReg.start(100,0,mpu.currenPos.ypr[1]);
 	while(1){
-		motorReg.work();
+
 		// printf("Yaw = %2.2f, Pitch = %2.2f, Roll = %2.2f \t Accel = %2.2f, %2.2f, %2.2f \t Gravity = %2.2f, %2.2f, %2.2f \t LinAccel = %2.2f, %2.2f, %2.2f \n",
 		// mpu.currenPos.ypr[0],mpu.currenPos.ypr[1],mpu.currenPos.ypr[2],
 		// mpu.currenPos.accel[0],mpu.currenPos.accel[1],mpu.currenPos.accel[2],

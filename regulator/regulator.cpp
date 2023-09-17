@@ -27,7 +27,7 @@ void regulator::work()
 			F[0] = A / 2 + newValue;
 			F[1] = A / 2 - newValue;
 			std::memcpy(buffer, F, 4);
-			// writeBytes(ARDUINO_ADR, 0x69, sizeof(buffer), buffer);
+			writeBytes(ARDUINO_ADR, 0x69, sizeof(buffer), buffer);
 			printf("angle = %2.2f \t L = %d \t R = %d\n", *trakingValue ,F[0],F[1]);
 		}
 	}
